@@ -14,7 +14,8 @@ def main():
         st.session_state.reset_triggered = False
 
     if st.session_state.reset_triggered:
-        st.session_state.clear()
+        st.session_state.activities = []
+        st.session_state.edit_mode = True
         st.session_state.reset_triggered = False
         st.rerun()
 
