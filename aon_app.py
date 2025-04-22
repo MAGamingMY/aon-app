@@ -12,29 +12,15 @@ def main():
         st.session_state.edit_mode = True
     if 'reset_triggered' not in st.session_state:
         st.session_state.reset_triggered = False
-    if 'edit_triggered' not in st.session_state:
-        st.session_state.edit_triggered = False
 
     if st.session_state.reset_triggered:
-        for key in list(st.session_state.keys()):
-            del st.session_state[key]
+        st.session_state.clear()
         st.session_state.reset_triggered = False
         st.rerun()
 
-    if st.session_state.edit_triggered:
-        st.session_state.edit_mode = True
-        st.session_state.edit_triggered = False
+    if st.button("🔄 Reset All Inputs"):
+        st.session_state.reset_triggered = True
         st.rerun()
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🔄 Reset All Inputs"):
-            st.session_state.reset_triggered = True
-            st.rerun()
-    with col2:
-        if st.button(✏️ Edit Input Data"):
-            st.session_state.edit_triggered = True
-            st.rerun()
 
     if st.session_state.edit_mode:
         num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
@@ -55,6 +41,7 @@ def main():
 
     else:
         df = pd.DataFrame(st.session_state.activities)
+        df['Predecessor'] = df['Predecessor'].apply(lambda x: x if isinstance(x, list) else [])
         df['EST'] = 0
         df['EFT'] = 0
         df['LST'] = 0
