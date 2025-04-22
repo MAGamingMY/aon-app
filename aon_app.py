@@ -11,18 +11,17 @@ def main():
     if 'edit_mode' not in st.session_state:
         st.session_state.edit_mode = True
 
-    # Buttons row
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("🔄 Reset All Inputs"):
-            st.session_state.clear()
-            st.experimental_set_query_params(reset=True)
-            st.stop()
-    with col2:
-        if st.button("✏️ Edit Input Data"):
-            st.session_state.edit_mode = True
-            st.experimental_set_query_params(edit=True)
-            st.stop()
+    reset_clicked = st.button("🔄 Reset All Inputs")
+    edit_clicked = st.button("✏️ Edit Input Data")
+
+    if reset_clicked:
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+    if edit_clicked:
+        st.session_state.edit_mode = True
+        st.rerun()
 
     if st.session_state.edit_mode:
         num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
@@ -39,7 +38,7 @@ def main():
         if st.button("Generate AON Diagram"):
             st.session_state.activities = activities
             st.session_state.edit_mode = False
-            st.experimental_rerun()
+            st.rerun()
 
     else:
         df = pd.DataFrame(st.session_state.activities)
