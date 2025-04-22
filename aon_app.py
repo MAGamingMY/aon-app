@@ -11,14 +11,18 @@ def main():
     if 'edit_mode' not in st.session_state:
         st.session_state.edit_mode = True
 
-    if st.button("🔄 Reset All Inputs"):
-        st.session_state.activities = []
-        st.session_state.edit_mode = True
-        st.experimental_rerun()
-
-    if st.button(✏️ Edit Input Data"):
-        st.session_state.edit_mode = True
-        st.experimental_rerun()
+    # Buttons row
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("🔄 Reset All Inputs"):
+            st.session_state.clear()
+            st.experimental_set_query_params(reset=True)
+            st.stop()
+    with col2:
+        if st.button("✏️ Edit Input Data"):
+            st.session_state.edit_mode = True
+            st.experimental_set_query_params(edit=True)
+            st.stop()
 
     if st.session_state.edit_mode:
         num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
@@ -97,7 +101,7 @@ def main():
                 if pred in pos:
                     x1, y1 = pos[pred]
                     x2, y2 = pos[row['Activity']]
-                    dx = node_width / 2 + 0.2  # offset from edge
+                    dx = node_width / 2 + 0.2
                     ax.annotate('', xy=(x2 - dx, y2), xytext=(x1 + dx, y1),
                                 arrowprops=dict(arrowstyle='->', lw=1.5), annotation_clip=False)
 
