@@ -6,9 +6,16 @@ from matplotlib.patches import Rectangle
 def main():
     st.title("Activity on Node (AON) Diagram Generator")
 
+    if 'reset' not in st.session_state:
+        st.session_state.reset = False
+
+    if st.button("🔄 Reset All Inputs"):
+        st.session_state.reset = True
+        st.experimental_rerun()
+
     st.write("Enter your project activities manually below:")
 
-    num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1)
+    num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
     activities = []
 
     for i in range(num_activities):
@@ -44,7 +51,6 @@ def main():
         df['Float'] = df['LST'] - df['EST']
         df['Critical'] = df['Float'] == 0
 
-        # Find critical path
         critical_activities = df[df['Critical']].sort_values(by='EST')
         critical_path = ' → '.join(critical_activities['Activity'])
         project_duration = df['EFT'].max()
