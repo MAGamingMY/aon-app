@@ -6,28 +6,39 @@ from matplotlib.patches import Rectangle
 def main():
     st.title("Activity on Node (AON) Diagram Generator")
 
-    if 'reset' not in st.session_state:
-        st.session_state.reset = False
+    if 'activities' not in st.session_state:
+        st.session_state.activities = []
+    if 'edit_mode' not in st.session_state:
+        st.session_state.edit_mode = True
 
     if st.button("🔄 Reset All Inputs"):
-        st.session_state.reset = True
+        st.session_state.activities = []
+        st.session_state.edit_mode = True
         st.experimental_rerun()
 
-    st.write("Enter your project activities manually below:")
+    if st.button("✏️ Edit Input Data"):
+        st.session_state.edit_mode = True
+        st.experimental_rerun()
 
-    num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
-    activities = []
+    if st.session_state.edit_mode:
+        num_activities = st.number_input("How many activities?", min_value=1, max_value=50, step=1, key='num_activities')
+        activities = []
 
-    for i in range(num_activities):
-        with st.expander(f"Activity {i + 1}"):
-            activity = st.text_input(f"Activity ID for Activity {i + 1}", key=f"id_{i}")
-            duration = st.number_input(f"Duration for {activity}", min_value=1, step=1, key=f"duration_{i}")
-            preds = st.text_input(f"Predecessors for {activity} (comma separated, leave blank if none)", key=f"pred_{i}")
-            pred_list = [p.strip() for p in preds.split(',') if p.strip()]
-            activities.append({'Activity': activity, 'Duration': duration, 'Predecessor': pred_list})
+        for i in range(num_activities):
+            with st.expander(f"Activity {i + 1}"):
+                activity = st.text_input(f"Activity ID for Activity {i + 1}", key=f"id_{i}")
+                duration = st.number_input(f"Duration for {activity}", min_value=1, step=1, key=f"duration_{i}")
+                preds = st.text_input(f"Predecessors for {activity} (comma separated, leave blank if none)", key=f"pred_{i}")
+                pred_list = [p.strip() for p in preds.split(',') if p.strip()]
+                activities.append({'Activity': activity, 'Duration': duration, 'Predecessor': pred_list})
 
-    if st.button("Generate AON Diagram"):
-        df = pd.DataFrame(activities)
+        if st.button("Generate AON Diagram"):
+            st.session_state.activities = activities
+            st.session_state.edit_mode = False
+            st.experimental_rerun()
+
+    else:
+        df = pd.DataFrame(st.session_state.activities)
         df['EST'] = 0
         df['EFT'] = 0
         df['LST'] = 0
@@ -61,12 +72,13 @@ def main():
         st.success(f"📌 Critical Path: {critical_path}")
         st.info(f"🕒 Total Project Duration: {project_duration} days")
 
+        # Layout management to avoid overlapping arrows and nodes
         fig, ax = plt.subplots(figsize=(14, 10))
         pos = {}
-        layers = df.groupby('EST')['Activity'].apply(list)
-        for i, acts in enumerate(layers):
-            for j, act in enumerate(acts):
-                pos[act] = (i * 6, -j * 5)
+        layer_map = df.groupby('EST')['Activity'].apply(list).to_dict()
+        for layer_idx, (est, activities) in enumerate(sorted(layer_map.items())):
+            for act_idx, act in enumerate(sorted(activities)):
+                pos[act] = (layer_idx * 7, -act_idx * 6)
 
         node_width, node_height = 4, 3
         for _, row in df.iterrows():
@@ -83,11 +95,12 @@ def main():
 
         for _, row in df.iterrows():
             for pred in row['Predecessor']:
-                x1, y1 = pos[pred]
-                x2, y2 = pos[row['Activity']]
-                dx = node_width / 2
-                ax.annotate('', xy=(x2 - dx, y2), xytext=(x1 + dx, y1),
-                            arrowprops=dict(arrowstyle='->', lw=1.5))
+                if pred in pos:
+                    x1, y1 = pos[pred]
+                    x2, y2 = pos[row['Activity']]
+                    dx = node_width / 2
+                    ax.annotate('', xy=(x2 - dx, y2), xytext=(x1 + dx, y1),
+                                arrowprops=dict(arrowstyle='->', lw=1.5))
 
         ax.set_xlim(-5, max(x for x, _ in pos.values()) + 10)
         ax.set_ylim(min(y for _, y in pos.values()) - 6, 5)
