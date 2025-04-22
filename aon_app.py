@@ -16,7 +16,7 @@ def main():
         st.session_state.edit_mode = True
         st.experimental_rerun()
 
-    if st.button("✏️ Edit Input Data"):
+    if st.button(✏️ Edit Input Data"):
         st.session_state.edit_mode = True
         st.experimental_rerun()
 
@@ -72,7 +72,6 @@ def main():
         st.success(f"📌 Critical Path: {critical_path}")
         st.info(f"🕒 Total Project Duration: {project_duration} days")
 
-        # Layout management to avoid overlapping arrows and nodes
         fig, ax = plt.subplots(figsize=(14, 10))
         pos = {}
         layer_map = df.groupby('EST')['Activity'].apply(list).to_dict()
@@ -98,9 +97,9 @@ def main():
                 if pred in pos:
                     x1, y1 = pos[pred]
                     x2, y2 = pos[row['Activity']]
-                    dx = node_width / 2
+                    dx = node_width / 2 + 0.2  # offset from edge
                     ax.annotate('', xy=(x2 - dx, y2), xytext=(x1 + dx, y1),
-                                arrowprops=dict(arrowstyle='->', lw=1.5))
+                                arrowprops=dict(arrowstyle='->', lw=1.5), annotation_clip=False)
 
         ax.set_xlim(-5, max(x for x, _ in pos.values()) + 10)
         ax.set_ylim(min(y for _, y in pos.values()) - 6, 5)
